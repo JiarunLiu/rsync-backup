@@ -125,7 +125,7 @@ fn_backup() {
     fn_log_info "Backup file from $1 to ${BACKUP_DIR}"
     
     # start backup script
-    bash "${BACKUP_SCRIPT} ${1} ${BACKUP_DIR} --strategy ${BACKUP_STRATEGY}" >> "${LOG_FILE}"
+    eval "bash "${BACKUP_SCRIPT} ${1} ${BACKUP_DIR}" >> "${LOG_FILE}""
 }
 
 
@@ -133,7 +133,6 @@ fn_backup() {
 # Parameters
 # -----------------------------------------------------------------------------
 
-BACKUP_STRATEGY="1:1 3:0"  # 每天备份一次，备份保留3天
 BACKUP_ROOT="/backup/root/directory" # 备份服务器上的主备份路径
 BACKUP_FILE="backup_list.txt"  # 需要备份的服务器清单，需要ssh公钥认证
 BACKUP_SCRIPT="rsync_tmbackup.sh"  # 数据备份脚本

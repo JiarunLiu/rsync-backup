@@ -277,7 +277,7 @@ DEST_FOLDER=""
 EXCLUSION_FILE=""
 LOG_DIR="$HOME/.$APPNAME"
 AUTO_DELETE_LOG="1"
-EXPIRATION_STRATEGY="1:1 30:7 365:30"
+EXPIRATION_STRATEGY="1:1 3:0"
 AUTO_EXPIRE="1"
 
 RSYNC_FLAGS="-D --numeric-ids --links --hard-links --one-file-system --itemize-changes --times --recursive --perms --owner --group --stats --human-readable"
