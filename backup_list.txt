@@ -1,0 +1,32 @@
+# -----------------------------------------------------------------------------
+# This is the list of all backup directory of servsers
+#
+# Author: Jiarun Liu
+# Date: 2021/10/09
+#
+# COMMENT RULE
+#   We support comment and blank line (without space), '#' is the symbol of 
+#   comment. Due to the potential confliect between comment and server list, 
+#   '#' and ' ' are not allowed for both server and directory name.
+# 
+# FILE END
+#   This file should ended with an blank line or comment. 
+#   Otherwise, you may skip one of the backup server
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# The backup server list.
+# 
+# FORMAT
+#   ${USER_NAME}@${IP_ADDR}:${TARGET_DIR}
+#
+# SAMPLE
+#   user@192.168.1.1:/file/folder
+# -----------------------------------------------------------------------------
+
+user@192.168.1.1:/file/folder
+user@192.168.1.1:/file/folder
+
+# -----------------------------------------------------------------------------
+# END
+# -----------------------------------------------------------------------------
