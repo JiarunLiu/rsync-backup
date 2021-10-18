@@ -50,25 +50,29 @@ fn_write_md5_info() {
     # $2: HOST_INFO
 
     if [ ! -f "${MD5_FILE}" ]; then
+        fn_log_info "generating md5 list file: ${MD5_FILE}"
         touch "${MD5_FILE}"
     fi
 
     local md5_info="${2} ${1}"
-    local md5_count=$(grep -c ${1} ${MD5_FILE})
-    local info_count=$(grep -c ${2} ${MD5_FILE})
-
-    # Avoid md5 code conflict
-    if [ ! ${info_count} -eq ${md5_count} ]; then
-        fn_log_error "Info_Count & MD5_Count Mismatch: ${info_count} vs ${md5_count}"
-        fn_log_error "Current MD5: ${1}"
-        fn_log_error "Current Info: ${2}"
-    fi
 
     # if md5 not logged, write md5 code to log file
     if [ $(grep -c "${md5_info}" "${MD5_FILE}") -eq 0 ]; then
         fn_log_warn "Writing MD5_INFO to ${MD5_FILE}"
         echo "${md5_info}" >> "${MD5_FILE}"
     fi
+
+    local md5_count=$(grep -c ${1} ${MD5_FILE})
+    local info_count=$(grep -c ${2} ${MD5_FILE})
+
+    # Avoid potential md5 code mismatch
+    if [ ${info_count} -gt 1 ]; then
+        fn_log_error "MD5 Encoding ERROR"
+        fn_log_error "Current MD5: ${1}"
+        fn_log_error "Current Info: ${2}"
+        fn_log_error "# INFO & MD5: ${info_count} vs ${md5_count}"
+    fi
+
 }
 
 fn_init_md5_code() {
@@ -117,7 +121,9 @@ fn_backup() {
 
     # make sure target backup file exists
     if ! ssh "${HOST_USER}@${HOST_IP}" test -e "${HOST_DIR}"; then 
-        fn_log_error "Target backup file don't exists!!!"
+        fn_log_error "Target backup file don't exists or can't accessed!!!"
+        fn_log_error "We will skip the backup for: ${HOST_INFO}"
+        return 0
     fi
 
     # initialize backup directory
@@ -125,6 +131,8 @@ fn_backup() {
     fn_log_info "Backup file from $1 to ${BACKUP_DIR}"
     
     # start backup script
+    echo "=====================================================================" >> "${LOG_FILE}"
+    echo "Starting an rsync backup for ${HOST_INFO}" >> "${LOG_FILE}"
     eval "bash "${BACKUP_SCRIPT} ${1} ${BACKUP_DIR}" >> "${LOG_FILE}""
 }
 
@@ -133,11 +141,11 @@ fn_backup() {
 # Parameters
 # -----------------------------------------------------------------------------
 
-BACKUP_ROOT="/backup/root/directory" # 备份服务器上的主备份路径
-BACKUP_FILE="backup_list.txt"  # 需要备份的服务器清单，需要ssh公钥认证
-BACKUP_SCRIPT="rsync_tmbackup.sh"  # 数据备份脚本
+BACKUP_ROOT="/backup/ailib/data" # directory to save backup data
+BACKUP_FILE="backup_list.txt"  # servers to backup with ssh permited
+BACKUP_SCRIPT="rsync_tmbackup.sh"  # backup script
 
-MD5_FILE="md5_list.txt"  # 存放路径和md5编码的对应关系
+MD5_FILE="md5_list.txt"  # save the relation between path and md5-code
 
 # -----------------------------------------------------------------------------
 # Starting Service
@@ -165,7 +173,7 @@ if [ ! -d "$(dirname "$LOG_FILE")" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# Load server list
+# Load backup list
 # -----------------------------------------------------------------------------
 
 fn_read_from_list "${BACKUP_FILE}"
@@ -185,16 +193,17 @@ for HOST_INFO in ${BACKUP_LIST[@]}; do
     fn_backup "${HOST_INFO}"
     
     current_end_time=$(date +%s)
-    current_cost_time=$[ END_TIME-START_TIME ]
+    current_cost_time=$((current_end_time-$current_start_time))
 
     fn_log_info "Finished: ${HOST_INFO}"
-    fn_log_info "Current elapsed time: $((TOTAL_COST_TIME/3600)) Hour $(((TOTAL_COST_TIME%3600)/60)) Min $((TOTAL_COST_TIME%60)) Sec"
+    fn_log_info "Current elapsed time: $(($current_cost_time/3600)) Hour $(((current_cost_time%3600)/60)) Min $((current_cost_time%60)) Sec"
+    fn_log_info "Current time: `date`"
 done
 
 echo "====================================================================="
 TOTAL_END_TIME=$(date +%s)
-TOTAL_COST_TIME=$[ END_TIME-START_TIME ]
-fn_log_info "Total elapsed time: $((TOTAL_COST_TIME/3600)) Hour $(((TOTAL_COST_TIME%3600)/60)) Min $((TOTAL_COST_TIME%60)) Sec"
+TOTAL_COST_TIME=$((TOTAL_END_TIME-TOTAL_START_TIME))
+fn_log_info "Total elapsed time: $(($TOTAL_COST_TIME/3600)) Hour $(((TOTAL_COST_TIME%3600)/60)) Min $(($TOTAL_COST_TIME%60)) Sec"
 fn_log_info "All Backup Finished at: `date`"
 echo "#####################################################################"
 echo ""
